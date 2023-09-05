@@ -1247,14 +1247,23 @@ rfft_plan make_rfft_plan (size_t length) {
     return plan;
 }
 
-
+#ifdef WA
+#undef WA
 #define WA(x,i) wa[(i)+(x)*(ido-1)]
+#endif
 #define PM(a,b,c,d) { a=c+d; b=c-d; }
 /* (a+ib) = conj(c+id) * (e+if) */
 #define MULPM(a,b,c,d,e,f) { a=c*e+d*f; b=c*f-d*e; }
 
+#ifdef CC
+#undef CC
 #define CC(a,b,c) cc[(a)+ido*((b)+l1*(c))]
+#endif
+
+#ifdef CH
+#undef CH
 #define CH(a,b,c) ch[(a)+ido*((b)+cdim*(c))]
+#endif
 
 NOINLINE static void radf2 (size_t ido, size_t l1, const double * restrict cc,
   double * restrict ch, const double * restrict wa)
@@ -1880,7 +1889,7 @@ int execute_real_forward(const double *a1, double *resultMatrix, npy_intp cols, 
     if (!fail) {
         size_t rstep = tdim[1]*2; //rows*2;//PyArray_DIM(ret, PyArray_NDIM(ret) - 1)*2; -> PyArray_DIM(ret, 1)*2
 
-        int nrepeats = cols*rows/npts;//PyArray_SIZE(data)/npts;// -> 256*65/npts = 65
+        int nrepeats = (int)(cols*rows/npts);//PyArray_SIZE(data)/npts;// -> 256*65/npts = 65
         double *rptr = (double *)(ret),
              *dptr = (double *)(data);
 
@@ -2187,8 +2196,8 @@ NOINLINE static void radbg(size_t ido, size_t ip, size_t l1,
   for (size_t j=1, jc=ip-1; j<ipph; ++j,--jc)   // 124
     for (size_t k=0; k<l1; ++k)
       {
-          size_t index1 = 0+ido*(k+l1*(j));
-          size_t index2 = 0+ido*(k+l1*(jc));
+//          size_t index1 = 0+ido*(k+l1*(j));
+//          size_t index2 = 0+ido*(k+l1*(jc));
       CH(0,k,j ) = C1(0,k,j)-C1(0,k,jc);
       CH(0,k,jc) = C1(0,k,j)+C1(0,k,jc);
       }
@@ -2274,12 +2283,12 @@ int rfft_backward(rfft_plan plan, double c[], double fct) {
 }
 
 int execute_real_backward(const double *data,  double *resultArray, npy_intp cols, npy_intp rows, double fct) {
-    int ndim = 2;
-    const npy_intp odim[] = {cols, rows};
+//    int ndim = 2;
+//    const npy_intp odim[] = {cols, rows};
     size_t npts = rows;
     
     double *ret = resultArray;
-    int nrepeats = cols*rows/npts;
+    int nrepeats = (int)(cols*rows/npts);
     
     double *rptr = (double *)(ret),
            *dptr = (double *)(data);
